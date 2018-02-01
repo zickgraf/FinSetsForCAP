@@ -4,7 +4,23 @@
 # Implementations
 #
 
+DeclareRepresentation( "IsSkeletalFiniteSetRep",
+        IsSkeletalFiniteSet and
+        IsAttributeStoringRep,
+        [ ] );
+
+DeclareRepresentation( "IsSkeletalFiniteSetMapRep",
+        IsSkeletalFiniteSetMap and
+        IsAttributeStoringRep,
+        [ ] );
+
 BindGlobal( "SkeletalFinSets", CreateCapCategory( "SkeletalFinSets" ) );
+
+AddObjectRepresentation( SkeletalFinSets, IsSkeletalFiniteSetRep );
+
+AddMorphismRepresentation( SkeletalFinSets, IsSkeletalFiniteSetMapRep );
+
+DisableAddForCategoricalOperations( SkeletalFinSets );
 
 ##
 InstallMethod( FinSet,
@@ -16,11 +32,9 @@ InstallMethod( FinSet,
     
     int:= rec( );
     
-    ObjectifyWithAttributes( int, TheTypeOfSkeletalFiniteSets,
+    ObjectifyObjectForCAPWithAttributes( int, SkeletalFinSets,
         Length, n );
 
-    Add( SkeletalFinSets, int );
-    
     Assert( 4, IsWellDefined( int ) );
     
     return int;
@@ -59,13 +73,11 @@ InstallMethod( MapOfFinSets,
     
     map := rec( );
     
-    ObjectifyWithAttributes( map, TheTypeOfMapsOfSkeletalFiniteSets,
+    ObjectifyMorphismForCAPWithAttributes( map, SkeletalFinSets,
             AsList, G,
             Source, s,
-            Range, t 
+            Range, t
         );
-    
-    Add( SkeletalFinSets, map );
     
     Assert( 4, IsWellDefined( map ) );
     
