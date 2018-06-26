@@ -4,7 +4,23 @@
 # Implementations
 #
 
+DeclareRepresentation( "IsFiniteSetRep",
+        IsFiniteSet and
+        IsAttributeStoringRep,
+        [ ] );
+
+DeclareRepresentation( "IsFiniteSetMapRep",
+        IsFiniteSetMap and
+        IsAttributeStoringRep,
+        [ ] );
+
 BindGlobal( "FinSets", CreateCapCategory( "FinSets" ) );
+
+AddObjectRepresentation( FinSets, IsFiniteSetRep );
+
+AddMorphismRepresentation( FinSets, IsFiniteSetMapRep );
+
+DisableAddForCategoricalOperations( FinSets );
 
 ##
 InstallMethod( FinSet,
@@ -31,11 +47,9 @@ InstallMethod( FinSetNC,
     
     set := rec( );
     
-    ObjectifyWithAttributes( set, TheTypeOfFiniteSets,
+    ObjectifyObjectForCAPWithAttributes( set, FinSets,
             AsList, L
             );
-    
-    Add( FinSets, set );
     
     Assert( 4, IsWellDefined( set ) );
 
@@ -120,13 +134,11 @@ InstallMethod( MapOfFinSetsNC,
     
     map := rec( );
     
-    ObjectifyWithAttributes( map, TheTypeOfMapsOfFiniteSets,
+    ObjectifyMorphismForCAPWithAttributes( map, FinSets,
             AsList, G,
             Source, S,
             Range, T
             );
-    
-    Add( FinSets, map );
     
     Assert( 4, IsWellDefined( map ) );
     
