@@ -14,7 +14,7 @@ g := MapOfFinSets( N, [ [1,2], [3,4] ], M );
 C := Coequalizer( f, g );
 #! <An object in FinSets>
 AsList( C );
-#! [ [ 1, 2, 4 ] ]
+#! [ [ 1, 2, 5 ] ]
 
 
 A := FinSet( [ 1, 2, 3, 4 ] );
