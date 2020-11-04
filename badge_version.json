@@ -2,6 +2,6 @@
 ---
 {
   "schemaVersion": 1,
-  "label": "to be overridden by url",
+  "label": "to be overridden by url!",
   "message": "{{ site.data.package.version }}"
 }
