@@ -7,7 +7,7 @@ on:
       - "*-ci"
   pull_request:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "36 * * * *"
 
 jobs:
   test:
@@ -19,8 +19,9 @@ jobs:
     container:
       image: ${{ matrix.image }}
     steps:
-      # keep workflow active even if repository has no activity for 60 days
-      - run: 'curl --fail -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/Tests.yml/enable'
+      # keep workflow active even if repository has no activity for 60 days (only execute when testing "master")
+      - run: echo "$GITHUB_EVENT_NAME"
+      - run: '[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/master)" ] && curl --fail -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/Tests.yml/enable'
       - uses: actions/checkout@v1
       - run: mkdir -p /home/gap/.gap/pkg/
       - run: sudo cp -a $GITHUB_WORKSPACE /home/gap/.gap/pkg/
