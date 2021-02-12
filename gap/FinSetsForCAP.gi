@@ -546,7 +546,7 @@ AddUniversalMorphismIntoDirectProductWithGivenDirectProduct( FinSets,
   function ( D, tau, T )
     local S, Graph;
     
-    S := Source( tau[1] );
+    S := Source( tau );
     
     Graph := List( AsList( S ), x -> [ x, List( tau, f -> f(x) ) ] );
     
