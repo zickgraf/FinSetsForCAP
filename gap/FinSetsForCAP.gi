@@ -611,7 +611,7 @@ AddUniversalMorphismIntoDirectProductWithGivenDirectProduct( category_of_finite_
   function ( category_of_finite_sets, D, test_object, tau, T )
     local S, Graph;
     
-    S := Source( tau[1] );
+    S := Source( tau );
     
     Graph := List( AsList( S ), x -> [ x, List( tau, f -> f(x) ) ] );
     
