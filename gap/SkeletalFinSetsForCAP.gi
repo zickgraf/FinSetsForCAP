@@ -4,6 +4,31 @@
 # Implementations
 #
 
+BindGlobal( "SKELETAL_FIN_SETS_compose_graphs", function( graphs... )
+  local result, graph;
+    
+    Assert( 0, Length( graphs ) > 0 );
+    
+    result := graphs[1];
+    
+    for graph in graphs{[ 2 .. Length( graphs ) ]} do
+        
+        result := graph{1 + result};
+        
+    od;
+    
+    return result;
+    
+end );
+
+CapJitAddTypeSignature( "SKELETAL_FIN_SETS_compose_graphs", "any", function ( input_types )
+    
+    Assert( 0, ForAll( input_types, t -> t.element_type.filter = IsInt ) );
+    
+    return input_types[1];
+    
+end );
+
 ##
 InstallMethod( CategoryOfSkeletalFinSets,
                [ ],
@@ -366,11 +391,61 @@ AddPreCompose( SkeletalFinSets,
     im_pre := AsList( map_pre );
     im_post := AsList( map_post );
     
-    cmp := List( s, i -> im_post[1 + im_pre[1 + i]] );
+    #cmp := List( s, i -> im_post[1 + im_pre[1 + i]] );
+    
+    #cmp := im_post{1 + im_pre};
+    
+    cmp := SKELETAL_FIN_SETS_compose_graphs( im_pre, im_post );
     
     return MapOfFinSets( cat, s, cmp, t );
     
 end );
+
+###
+#AddPreCompose( SkeletalFinSets,
+#  function ( cat, map_pre, map_post, map_post2 )
+#    local s, t, im_pre, im_post, cmp;
+#    
+#    s := Source( map_pre );
+#    t := Range( map_post2 );
+#    
+#    im_pre := AsList( map_pre );
+#    im_post := AsList( map_post );
+#    im_post2 := AsList( map_post2 );
+#    
+#    cmp := List( [ 0 .. Length( s ) - 1 ], i -> im_post2[1 + im_post[1 + im_pre[1 + i]]] );
+#    
+#    List( [ 0 .. Length( s ) - 1 ], i -> im_post2[1 + im_post[1 + im_pre[1 + i]]] )
+#    
+#    
+#    im_post2{im_post{im_pre}} = (im_post2{im_post}){im_pre}
+#    
+#    return MapOfFinSets( cat, s, cmp, t );
+#    
+#end );
+#
+###
+#AddPreComposeList( SkeletalFinSets,
+#  function ( cat, list )
+#    local s, t, im_pre, im_post, cmp;
+#    
+#    s := Source( list[1] );
+#    t := Range( Last( list ) );
+#    
+#    graphs := List( list, graphs );
+#    
+#    func := function ( i, graph )
+#        return graph[i];
+#    end;
+#    
+#    cmp := List( [ 0 .. Length( s ) - 1 ], i -> Iterated( graphs, func, i ) );
+#    
+#    
+#    #[ i, im_pre, im_post] ----> im_post[im_pre[i]]
+#    
+#    return MapOfFinSets( cat, s, cmp, t );
+#    
+#end );
 
 ##
 AddImageObject( SkeletalFinSets,

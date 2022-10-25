@@ -9,7 +9,7 @@ CapJitAddLogicFunction( function ( tree )
   local pre_func;
     
     Info( InfoCapJit, 1, "####" );
-    Info( InfoCapJit, 1, "Apply logic for global functions applied to literal integers" );
+    Info( InfoCapJit, 1, "Apply logic for global functions applied to literal integers." );
     
     pre_func := function ( tree, additional_arguments )
         local args;
@@ -79,6 +79,233 @@ CapJitAddLogicTemplate(
     )
 );
 
+##
+CapJitAddLogicFunction( function ( tree )
+  local pre_func;
+    
+    Info( InfoCapJit, 1, "####" );
+    Info( InfoCapJit, 1, "Apply logic for SKELETAL_FIN_SETS_compose_graphs." );
+    
+    pre_func := function ( tree, additional_arguments )
+      local i;
+        
+        if CapJitIsCallToGlobalFunction( tree, "SKELETAL_FIN_SETS_compose_graphs" ) then
+            
+            # TODO: generalize
+            # SKELETAL_FIN_SETS_compose_graphs( ListWithIdenticalEntries( ), list ) => ListWithIdenticalEntries
+            if tree.args.length = 2 and CapJitIsCallToGlobalFunction( tree.args.1, "ListWithIdenticalEntries" ) then
+                
+                return rec(
+                    type := "EXPR_FUNCCALL",
+                    funcref := rec(
+                        type := "EXPR_REF_GVAR",
+                        gvar := "ListWithIdenticalEntries",
+                    ),
+                    args := AsSyntaxTreeList( [
+                        tree.args.1.args.1,
+                        rec(
+                            type := "EXPR_FUNCCALL",
+                            funcref := rec(
+                                type := "EXPR_REF_GVAR",
+                                gvar := "[]",
+                            ),
+                            args := AsSyntaxTreeList( [
+                                tree.args.2,
+                                rec(
+                                    type := "EXPR_FUNCCALL",
+                                    funcref := rec(
+                                        type := "EXPR_REF_GVAR",
+                                        gvar := "+",
+                                    ),
+                                    args := AsSyntaxTreeList( [
+                                        rec(
+                                            type := "EXPR_INT",
+                                            value := 1,
+                                        ),
+                                        tree.args.1.args.2,
+                                    ] ),
+                                ),
+                            ] ),
+                        ),
+                    ] ),
+                );
+                
+            fi;
+            
+            
+            # constant lists at the end
+            # SKELETAL_FIN_SETS_compose_graphs( ..., [ entry ] ) => ListWithIdenticalEntries
+            if Last( tree.args ).type = "EXPR_LIST" and Last( tree.args ).list.length = 1 then
+                
+                return rec(
+                    type := "EXPR_FUNCCALL",
+                    funcref := rec(
+                        type := "EXPR_REF_GVAR",
+                        gvar := "ListWithIdenticalEntries",
+                    ),
+                    args := AsSyntaxTreeList( [
+                        rec(
+                            type := "EXPR_FUNCCALL",
+                            funcref := rec(
+                                type := "EXPR_REF_GVAR",
+                                gvar := "Length",
+                            ),
+                            args := AsSyntaxTreeList( [
+                                tree.args.1,
+                            ] ),
+                        ),
+                        Last( tree.args ).list.1,
+                    ] ),
+                );
+                
+            # SKELETAL_FIN_SETS_compose_graphs( ..., ListWithIdenticalEntries ) => ListWithIdenticalEntries
+            elif CapJitIsCallToGlobalFunction( Last( tree.args ), "ListWithIdenticalEntries" ) then
+                
+                return rec(
+                    type := "EXPR_FUNCCALL",
+                    funcref := rec(
+                        type := "EXPR_REF_GVAR",
+                        gvar := "ListWithIdenticalEntries",
+                    ),
+                    args := AsSyntaxTreeList( [
+                        rec(
+                            type := "EXPR_FUNCCALL",
+                            funcref := rec(
+                                type := "EXPR_REF_GVAR",
+                                gvar := "Length",
+                            ),
+                            args := AsSyntaxTreeList( [
+                                tree.args.1,
+                            ] ),
+                        ),
+                        Last( tree.args ).args.2,
+                    ] ),
+                );
+                
+            fi;
+            
+            # flatten
+            if ForAny( tree.args, a -> CapJitIsCallToGlobalFunction( a, "SKELETAL_FIN_SETS_compose_graphs" ) ) then
+                
+                tree := ShallowCopy( tree );
+                
+                tree.args := ConcatenationForSyntaxTreeLists( AsListMut( List( tree.args, function ( a )
+                    
+                    if CapJitIsCallToGlobalFunction( a, "SKELETAL_FIN_SETS_compose_graphs" ) then
+                        
+                        return a.args;
+                        
+                    else
+                        
+                        return AsSyntaxTreeList( [ a ] );
+                        
+                    fi;
+                    
+                end ) ) );
+                
+            else
+                
+                i := 1;
+                
+                while i <= tree.args.length do
+                    
+                    # TODO: generalize?
+                    
+                    tree := ShallowCopy( tree );
+                    tree.args := ShallowCopy( tree.args );
+                    
+                    if i < tree.args.length and tree.args.(i).type in [ "EXPR_RANGE", "EXPR_LIST" ] and CapJitIsCallToGlobalFunction( tree.args.(i + 1), "List" ) and tree.args.(i + 1).args.1.type = "EXPR_RANGE" and tree.args.(i + 1).args.1.first.type = "EXPR_INT" and tree.args.(i + 1).args.1.first.value = 0 then
+                        
+                        # move literal list or range into list call of next argument
+                        
+                        tree.args.(i + 1) := ShallowCopy( tree.args.(i + 1) );
+                        tree.args.(i + 1).args := ShallowCopy( tree.args.(i + 1).args );
+                        
+                        tree.args.(i + 1).args.1 := tree.args.(i);
+                        
+                        Remove( tree.args, i );
+                        
+                    elif i < tree.args.length and tree.args.(i).type = "EXPR_LIST" and tree.args.(i).list.length = 1 then
+                        
+                        tree.args.(i + 1) := rec(
+                            type := "EXPR_LIST",
+                            list := AsSyntaxTreeList( [
+                                rec(
+                                    type := "EXPR_FUNCCALL",
+                                    funcref := rec(
+                                        type := "EXPR_REF_GVAR",
+                                        gvar := "[]",
+                                    ),
+                                    args := AsSyntaxTreeList( [
+                                        tree.args.(i + 1),
+                                        rec(
+                                            type := "EXPR_FUNCCALL",
+                                            funcref := rec(
+                                                type := "EXPR_REF_GVAR",
+                                                gvar := "+",
+                                            ),
+                                            args := AsSyntaxTreeList( [
+                                                rec(
+                                                    type := "EXPR_INT",
+                                                    value := 1,
+                                                ),
+                                                tree.args.(i).list.1,
+                                            ] ),
+                                        ),
+                                    ] ),
+                                ),
+                            ] ),
+                        );
+                        
+                        Remove( tree.args, i );
+                        
+                    elif i = tree.args.length and i >= 2 and tree.args.(i).type = "EXPR_RANGE" and tree.args.(i).first.type = "EXPR_INT" and tree.args.(i).first.value = 0 then
+                            
+                        # we can only drop
+                        Remove( tree.args, i );
+                        
+                    else
+                        
+                        i := i + 1;
+                        
+                    fi;
+                    
+                od;
+                
+                if tree.args.length = 1 then
+                    
+                    return tree.args.1;
+                    
+                fi;
+                
+            fi;
+            
+        fi;
+        
+        return tree;
+        
+    end;
+    
+    return CapJitIterateOverTree( tree, pre_func, CapJitResultFuncCombineChildren, ReturnTrue, true );
+    
+end );
+
+#CapJitAddLogicTemplate(
+#    rec(
+#        variable_names := [ "last", "list" ],
+#        src_template := "SKELETAL_FIN_SETS_compose_graphs( list, [ 0 .. last ] )",
+#        dst_template := "list",
+#    )
+#);
+#
+#CapJitAddLogicTemplate(
+#    rec(
+#        variable_names := [ "last1", "last2", "func" ],
+#        src_template := "SKELETAL_FIN_SETS_compose_graphs( [ 0 .. last1 ], List( [ 0 .. last2 ], func ) )",
+#        dst_template := "List( [ 0 .. last1 ], func )",
+#    )
+#);
+
 ## for PushoutComplement
 CapJitAddLogicTemplate(
     rec(
@@ -124,6 +351,15 @@ CapJitAddLogicTemplate(
     )
 );
 
+## for PushoutComplement
+CapJitAddLogicTemplate(
+    rec(
+        variable_names := [ "last" ],
+        src_template := "List( [ 0 .. last - 1 ], x -> REM_INT( x, last ) )",
+        dst_template := "[ 0 .. last - 1 ]",
+    )
+);
+
 CapJitAddLogicTemplate(
     rec(
         variable_names := [ "last", "func" ],
@@ -146,6 +382,23 @@ CapJitAddLogicTemplate(
         variable_names := [ "last", "func1", "func2" ],
         src_template := "Filtered( [ 0 .. last ], x -> List( [ 0 .. last ], func1 )[1 + x] = List( [ 0 .. last ], func2 )[1 + x] )",
         dst_template := "Filtered( [ 0 .. last ], x -> func1( x ) = func2( x ) )",
+    )
+);
+
+CapJitAddLogicTemplate(
+    rec(
+        variable_names := [ "last", "list" ],
+        src_template := "[ 0 .. last ]{1 + list}",
+        dst_template := "list",
+    )
+);
+
+# degenerate case of the rule above
+CapJitAddLogicTemplate(
+    rec(
+        variable_names := [ "last", "list" ],
+        src_template := "[ 0 ]{1 + list}",
+        dst_template := "list",
     )
 );
 
