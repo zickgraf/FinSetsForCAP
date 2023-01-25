@@ -87,6 +87,12 @@ DeclareOperation( "FinSet",
 #! @Returns a &CAP; object
 KeyDependentOperation( "FinSet", IsSkeletalCategoryOfFiniteSets, IsBigInt, ReturnTrue );
 
+CapJitAddTypeSignature( "FinSet", [ IsCategoryOfSkeletalFinSets, IsInt ], function ( input_types )
+    
+    return CapJitDataTypeOfObjectOfCategory( input_types[1].category );
+    
+end );
+
 #! @Description
 #!  Construct a map $\phi:$<A>s</A>$\to$<A>t</A> of the skeletal finite sets <A>s</A> and <A>t</A>,
 #!  i.e., a morphism in the &CAP; category of <A>s</A>, where <A>G</A>
@@ -96,6 +102,12 @@ KeyDependentOperation( "FinSet", IsSkeletalCategoryOfFiniteSets, IsBigInt, Retur
 DeclareOperation( "MapOfFinSets",
         [ IsObjectInSkeletalCategoryOfFiniteSets, IsList, IsObjectInSkeletalCategoryOfFiniteSets ] );
 #! @InsertChunk  SkeletalMapOfFinSets
+
+CapJitAddTypeSignature( "MapOfFinSets", [ IsCategoryOfSkeletalFinSets, IsSkeletalFiniteSet, IsList, IsSkeletalFiniteSet ], function ( input_types )
+    
+    return CapJitDataTypeOfMorphismOfCategory( input_types[1].category );
+    
+end );
 
 #! @Section Tools
 
